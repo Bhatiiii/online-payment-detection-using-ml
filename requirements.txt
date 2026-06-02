@@ -1,1 +1,6 @@
-flask joblib pandas numpy scikit-learn gunicorn
+flask 
+joblib
+pandas 
+numpy
+scikit-learn 
+gunicorn
