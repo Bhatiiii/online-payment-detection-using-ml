@@ -1,0 +1,46 @@
+{
+  "accuracy": 0.75,
+  "precision": 0.0566,
+  "recall": 1.0,
+  "f1_score": 0.1071,
+  "confusion_matrix": {
+    "tn": 1470,
+    "fp": 500,
+    "fn": 0,
+    "tp": 30
+  },
+  "feature_importance": [
+    {
+      "name": "velocity_last_24h",
+      "importance": 0.22201900408129766
+    },
+    {
+      "name": "transaction_hour",
+      "importance": 0.20067612574618063
+    },
+    {
+      "name": "device_trust_score",
+      "importance": 0.17470619432465148
+    },
+    {
+      "name": "amount",
+      "importance": 0.1458484041974835
+    },
+    {
+      "name": "cardholder_age",
+      "importance": 0.0971187501923374
+    },
+    {
+      "name": "foreign_transaction",
+      "importance": 0.0731958694639114
+    },
+    {
+      "name": "location_mismatch",
+      "importance": 0.047696668683265615
+    },
+    {
+      "name": "merchant_encoded",
+      "importance": 0.038738983310872485
+    }
+  ]
+}

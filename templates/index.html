@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Payment Fraud Detection</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:#f5f7fb;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,sans-serif;padding:2rem;color:#1e293b}
+        :root{
+            --color-background-primary:#ffffff;
+            --color-background-secondary:#f8fafc;
+            --color-background-success:#e6f7f0;
+            --color-background-danger:#fee9e6;
+            --color-background-info:#e6f0ff;
+            --color-background-warning:#fff4e6;
+            --color-text-primary:#0f172a;
+            --color-text-secondary:#475569;
+            --color-text-tertiary:#64748b;
+            --color-text-success:#1e7b4f;
+            --color-text-danger:#b91c1c;
+            --color-text-info:#1e40af;
+            --color-text-warning:#b45309;
+            --color-border-tertiary:#e2e8f0;
+            --color-border-secondary:#cbd5e1;
+            --border-radius-md:8px;
+            --border-radius-lg:16px;
+            --font-mono:ui-monospace,'SF Mono',monospace;
+        }
+        .dash{max-width:900px;margin:0 auto}
+        .page-title{font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem}
+        .main-card{background:white;border-radius:24px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:1.5rem}
+        .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+        .card-title{font-weight:600;display:flex;align-items:center;gap:8px}
+        .insights-btn{background:none;border:1px solid #e2e8f0;border-radius:30px;padding:6px 12px;cursor:pointer;font-size:0.8rem;transition:0.2s}
+        .insights-btn:hover{background:#f1f5f9}
+        .insights-drawer{display:none;margin-bottom:1.5rem;background:#f8fafc;border-radius:16px;padding:1rem}
+        .insights-drawer.open{display:block}
+        .feat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+        .feat-name{width:130px;font-size:0.75rem;color:#475569}
+        .feat-bar-wrap{flex:1;height:6px;background:#e2e8f0;border-radius:4px}
+        .feat-bar-fill{height:100%;background:#3b82f6;border-radius:4px}
+        .feat-val{width:40px;font-size:0.7rem;text-align:right}
+        .cm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+        .cm-cell{text-align:center}
+        .cm-lbl{font-size:0.7rem;color:#64748b}
+        .cm-val{padding:6px;border-radius:12px;font-weight:700;font-size:1rem}
+        .form-cols{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .fg{margin-bottom:0.75rem}
+        .fg label{font-size:0.75rem;font-weight:500;color:#334155;display:block;margin-bottom:4px}
+        .fg input,.fg select{width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:12px;font-size:0.85rem}
+        .rg{display:flex;gap:8px}
+        .rb{flex:1}
+        .rb input{display:none}
+        .rb label{display:block;text-align:center;padding:6px;border:1px solid #cbd5e1;border-radius:12px;font-size:0.75rem;cursor:pointer}
+        .rb input:checked+label{background:#e6f0ff;border-color:#3b82f6;color:#1e40af}
+        .btn{width:100%;padding:10px;background:#0f172a;color:white;border:none;border-radius:40px;font-weight:600;margin-top:8px;cursor:pointer;transition:0.2s}
+        .btn:hover{background:#1e293b}
+        .result-card{border-radius:20px;padding:1.25rem;margin-top:1rem}
+        .r-safe{background:#e6f7f0;border-left:4px solid #10b981}
+        .r-fraud{background:#fee9e6;border-left:4px solid #ef4444}
+        .r-title{font-size:1.1rem;font-weight:700}
+        .r-safe .r-title{color:#047857}
+        .r-fraud .r-title{color:#b91c1c}
+        .pb-wrap{margin-top:12px}
+        .pb-lbl{display:flex;justify-content:space-between;font-size:0.7rem;margin-bottom:4px}
+        .pb{height:6px;background:#e2e8f0;border-radius:4px}
+        .pf{height:100%;border-radius:4px}
+        .pf-s{background:#10b981}
+        .pf-f{background:#ef4444}
+        .history-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8fafc;border-radius:14px;margin-bottom:6px}
+        .tx-mono{font-family:monospace;font-size:0.7rem;color:#475569}
+        .full-span{grid-column:span 2}
+        .divider{margin:1rem 0;border-top:1px solid #e2e8f0}
+    </style>
+</head>
+<body>
+<div class="dash">
+    <div class="page-title">
+        <span>💳 Online Payment Fraud Detection</span>
+    </div>
+    <div class="main-card">
+        <div class="card-header">
+            <div class="card-title">🔍 Transaction details</div>
+            <button class="insights-btn" onclick="toggleInsights()">📊 Model insights</button>
+        </div>
+        <div class="insights-drawer" id="insights-drawer">
+            <div style="font-weight:600;margin-bottom:10px">Feature importance</div>
+            <div id="feat-imp-chart"></div>
+            <div class="divider"></div>
+            <div style="font-weight:600;margin-bottom:8px">Confusion matrix (test)</div>
+            <div class="cm-grid" id="cm-grid"></div>
+        </div>
+
+        <div class="form-cols">
+            <div class="fg full-span">
+                <label>Transaction ID (optional)</label>
+                <input type="text" id="tx-id" placeholder="Auto-generated if blank">
+            </div>
+            <div class="fg"><label>Amount (₹)</label><input type="number" id="amount" step="0.01" placeholder="e.g. 1250"></div>
+            <div class="fg"><label>Transaction hour (0-23)</label><input type="number" id="tx-hour" min="0" max="23"></div>
+            <div class="fg">
+                <label>Merchant category</label>
+                <select id="merchant">
+                    <option>Electronics</option><option>Food</option><option>Clothing</option><option>Grocery</option><option>Travel</option>
+                </select>
+            </div>
+            <div class="fg"><label>Device trust score (0-100)</label><input type="number" id="device-trust" min="0" max="100"></div>
+            <div class="fg">
+                <label>Foreign transaction?</label>
+                <div class="rg"><div class="rb"><input type="radio" name="foreign" value="0" checked id="f0"><label for="f0">No</label></div><div class="rb"><input type="radio" name="foreign" value="1" id="f1"><label for="f1">Yes</label></div></div>
+            </div>
+            <div class="fg">
+                <label>Location mismatch?</label>
+                <div class="rg"><div class="rb"><input type="radio" name="location" value="0" checked id="l0"><label for="l0">No</label></div><div class="rb"><input type="radio" name="location" value="1" id="l1"><label for="l1">Yes</label></div></div>
+            </div>
+            <div class="fg"><label>Transactions in last 24h</label><input type="number" id="velocity" min="0"></div>
+            <div class="fg"><label>Cardholder age</label><input type="number" id="age" min="18" max="90"></div>
+            <div class="full-span"><button class="btn" onclick="predict()">🔎 Analyze transaction</button></div>
+        </div>
+        <div id="result-area"></div>
+        <div id="history-area" style="margin-top:1rem"></div>
+    </div>
+</div>
+
+<script>
+    let insightsOpen = false;
+    let history = [];
+
+    async function loadStats() {
+        const res = await fetch('/stats');
+        const stats = await res.json();
+        // feature importance
+        const container = document.getElementById('feat-imp-chart');
+        container.innerHTML = '';
+        for (let f of stats.feature_importance) {
+            const pct = (f.importance / stats.feature_importance[0].importance * 100).toFixed(1);
+            container.innerHTML += `<div class="feat-row">
+                <div class="feat-name">${f.name}</div>
+                <div class="feat-bar-wrap"><div class="feat-bar-fill" style="width:${pct}%"></div></div>
+                <div class="feat-val">${(f.importance*100).toFixed(1)}%</div>
+            </div>`;
+        }
+        // confusion matrix
+        const cm = stats.confusion_matrix;
+        document.getElementById('cm-grid').innerHTML = `
+            <div class="cm-cell"><div class="cm-lbl">True negative</div><div class="cm-val" style="background:#e6f7f0;color:#047857">${cm.tn}</div><div class="cm-sub">Correctly safe</div></div>
+            <div class="cm-cell"><div class="cm-lbl">False negative</div><div class="cm-val" style="background:#fff4e6;color:#b45309">${cm.fn}</div><div class="cm-sub">Missed frauds</div></div>
+            <div class="cm-cell"><div class="cm-lbl">False positive</div><div class="cm-val" style="background:#e6f0ff;color:#1e40af">${cm.fp}</div><div class="cm-sub">False alarms</div></div>
+            <div class="cm-cell"><div class="cm-lbl">True positive</div><div class="cm-val" style="background:#fee9e6;color:#b91c1c">${cm.tp}</div><div class="cm-sub">Caught frauds</div></div>
+        `;
+    }
+
+    function toggleInsights() {
+        insightsOpen = !insightsOpen;
+        document.getElementById('insights-drawer').classList.toggle('open', insightsOpen);
+    }
+
+    async function predict() {
+        const txId = document.getElementById('tx-id').value.trim() || '';
+        const amount = parseFloat(document.getElementById('amount').value);
+        const hour = parseInt(document.getElementById('tx-hour').value);
+        const merchant = document.getElementById('merchant').value;
+        const foreign = document.querySelector('input[name="foreign"]:checked').value;
+        const locMismatch = document.querySelector('input[name="location"]:checked').value;
+        const deviceTrust = parseInt(document.getElementById('device-trust').value);
+        const velocity = parseInt(document.getElementById('velocity').value);
+        const age = parseInt(document.getElementById('age').value);
+
+        if ([amount, hour, deviceTrust, velocity, age].some(v => isNaN(v))) {
+            alert('Please fill all numeric fields.');
+            return;
+        }
+
+        const payload = {
+            ...(txId && { transaction_id: txId }),
+            amount: amount,
+            transaction_hour: hour,
+            merchant_category: merchant,
+            foreign_transaction: parseInt(foreign),
+            location_mismatch: parseInt(locMismatch),
+            device_trust_score: deviceTrust,
+            velocity_last_24h: velocity,
+            cardholder_age: age
+        };
+        try {
+            const res = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            displayResult(data);
+            addToHistory(data);
+        } catch (err) {
+            alert('Prediction error: ' + err.message);
+        }
+    }
+
+    function displayResult(data) {
+        const isFraud = data.is_fraud;
+        const fraudProb = data.fraud_prob * 100;
+        const safeProb = data.safe_prob * 100;
+        const flagsHtml = isFraud
+            ? data.risk_flags.map(f => `<span style="font-size:10px;padding:2px 8px;border-radius:40px;background:rgba(0,0,0,0.05)">${f}</span>`).join('')
+            : '';
+        document.getElementById('result-area').innerHTML = `
+            <div class="result-card ${isFraud ? 'r-fraud' : 'r-safe'}">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                    <span>${isFraud ? '⚠️' : '✅'}</span>
+                    <div class="r-title">${isFraud ? 'Fraud' : 'Legitimate'} transaction</div>
+                </div>
+                <div class="r-msg">ID: <strong>${data.transaction_id}</strong><br>Fraud probability: ${fraudProb.toFixed(1)}%</div>
+                <div class="pb-wrap"><div class="pb-lbl"><span>Safe</span><span>${safeProb.toFixed(1)}%</span></div><div class="pb"><div class="pf pf-s" style="width:${safeProb}%"></div></div></div>
+                <div class="pb-wrap"><div class="pb-lbl"><span>Fraud risk</span><span>${fraudProb.toFixed(1)}%</span></div><div class="pb"><div class="pf pf-f" style="width:${fraudProb}%"></div></div></div>
+                ${flagsHtml ? `<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">${flagsHtml}</div>` : ''}
+            </div>
+        `;
+    }
+
+    function addToHistory(data) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        history.unshift({
+            id: data.transaction_id,
+            amt: `₹${document.getElementById('amount').value}`,
+            time: timeStr,
+            isFraud: data.is_fraud
+        });
+        if (history.length > 3) history.pop();
+        const ha = document.getElementById('history-area');
+        ha.innerHTML = `<div style="font-weight:500;margin-bottom:8px">📋 Recent checks</div>` + 
+            history.map(h => `<div class="history-row">
+                <div><div class="tx-mono">${h.id}</div><div style="font-size:0.8rem">${h.amt} · ${h.time}</div></div>
+                <div style="padding:2px 12px;border-radius:40px;font-size:0.7rem;font-weight:600;background:${h.isFraud?'#fee9e6':'#e6f7f0'};color:${h.isFraud?'#b91c1c':'#047857'}">${h.isFraud?'Fraud':'Safe'}</div>
+            </div>`).join('');
+    }
+
+    loadStats();
+</script>
+</body>
+</html>
